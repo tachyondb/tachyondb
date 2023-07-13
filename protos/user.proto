@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+message User {
+    string firstName = 1;
+    string lastName = 2;
+    string email = 3;
+    string phone = 4;
+    string createdAt = 5;
+    string updatedAt = 6;
+    string deletedAt = 7;
+}
+
+message Users {
+    repeated User users = 1;
+}
