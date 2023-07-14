@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
+	"reflect"
 )
 
 type Item struct {
@@ -16,65 +16,82 @@ type Item struct {
 var filename = "data.bin"
 
 func Write(item interface{}) error {
-		// Create a buffer to store encoded data
-		var buf bytes.Buffer
-
-		// Create a new encoder writing to the buffer
-		enc := gob.NewEncoder(&buf)
-
-		// Encode (write) the items one by one
-		err := enc.Encode(&item)
-		if err != nil {
-			return err
-		}
-
-		// Write the encoded data to a file
-		err = ioutil.WriteFile(filename, buf.Bytes(), 0644)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-}
-
-func Read() {
-	// Now let's read the data back and decode it
-	data, err := ioutil.ReadFile("data.gob")
+	// Open the file in append mode
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatal("read file:", err)
+		return err
+	}
+	defer file.Close()
+
+	// Create a new encoder writing to the file
+	enc := gob.NewEncoder(file)
+
+	// Wrap the item in a slice and encode it
+	err = enc.Encode([]interface{}{item})
+	if err != nil {
+		return err
 	}
 
-	// Create a decoder
-	dec := gob.NewDecoder(bytes.NewBuffer(data))
+	return nil
+}
 
-	// Decode (read) the items into a new slice
-	var decodedItems []Item
+
+func Read(items interface{}) error {
+	// Open the file for reading
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Create a decoder
+	dec := gob.NewDecoder(file)
+
+	// Decode (read) the items into the provided slice
+	sliceValue := reflect.ValueOf(items).Elem()
 	for {
-		var item Item
-		err := dec.Decode(&item)
+		itemType := sliceValue.Type().Elem()
+		item := reflect.New(itemType)
+
+		err := dec.Decode(item.Interface())
 		if err != nil {
 			if err.Error() == "EOF" {
 				break
 			} else {
-				log.Fatal("decode:", err)
+				return err
 			}
 		}
-		decodedItems = append(decodedItems, item)
+
+		sliceValue.Set(reflect.Append(sliceValue, item.Elem()))
 	}
 
-	// Print the decoded items
-	for _, item := range decodedItems {
-		fmt.Printf("%s: %d\n", item.Name, item.Value)
-	}
+	return nil
 }
 
+
 func main() {
+	gob.Register(Item{})
+
 	items := []Item{
 		{"Item 1", 1},
 		{"Item 2", 2},
 		{"Item 3", 3},
 	}
-	Write(items[0])
-	Read()
+
+	for _, item := range items {
+		err := Write(item)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	var newItems []Item
+	err := Read(&newItems)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, item := range newItems {
+		fmt.Printf("%s: %d\n", item.Name, item.Value)
+	}
 }
