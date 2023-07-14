@@ -8,48 +8,67 @@ import (
 	"log"
 )
 
-type User struct {
-	FirstName string
-	LastName  string
+type Item struct {
+	Name  string
+	Value int
 }
 
-func saveToFile(filename string, data interface{}) error {
-	var buffer bytes.Buffer
-	enc := gob.NewEncoder(&buffer)
-	if err := enc.Encode(data); err != nil {
-		return err
-	}
-	return ioutil.WriteFile(filename, buffer.Bytes(), 0644)
-}
-
-func readFromFile(filename string, out interface{}) error {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	dec := gob.NewDecoder(bytes.NewBuffer(data))
-	return dec.Decode(out)
-}
-
+var filename = "data.bin"
 
 func main() {
-	filename := "users.gob"
-	user := &User{FirstName: "John", LastName: "Doe"}
-	users := []*User{user}
+	// Create a buffer to store encoded data
+	var buf bytes.Buffer
 
-	// Save users to file
-	if err := saveToFile(filename, users); err != nil {
-		log.Fatalf("Failed to save: %v", err)
+	// Create a new encoder writing to the buffer
+	enc := gob.NewEncoder(&buf)
+
+	// Create some items to encode
+	items := []Item{
+		{"Item 1", 1},
+		{"Item 2", 2},
+		{"Item 3", 3},
 	}
 
-	// Read users from file
-	var loadedUsers []*User
-	if err := readFromFile(filename, &loadedUsers); err != nil {
-		log.Fatalf("Failed to load: %v", err)
+	// Encode (write) the items one by one
+	for _, item := range items {
+		err := enc.Encode(&item)
+		if err != nil {
+			log.Fatal("encode:", err)
+		}
 	}
 
-	fmt.Println("Loaded users:")
-	for _, user := range loadedUsers {
-		fmt.Printf("%+v\n", *user)
+	// Write the encoded data to a file
+	err := ioutil.WriteFile("data.gob", buf.Bytes(), 0644)
+	if err != nil {
+		log.Fatal("write file:", err)
+	}
+
+	// Now let's read the data back and decode it
+	data, err := ioutil.ReadFile("data.gob")
+	if err != nil {
+		log.Fatal("read file:", err)
+	}
+
+	// Create a decoder
+	dec := gob.NewDecoder(bytes.NewBuffer(data))
+
+	// Decode (read) the items into a new slice
+	var decodedItems []Item
+	for {
+		var item Item
+		err := dec.Decode(&item)
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			} else {
+				log.Fatal("decode:", err)
+			}
+		}
+		decodedItems = append(decodedItems, item)
+	}
+
+	// Print the decoded items
+	for _, item := range decodedItems {
+		fmt.Printf("%s: %d\n", item.Name, item.Value)
 	}
 }
