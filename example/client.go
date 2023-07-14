@@ -39,16 +39,6 @@ func Write(item interface{}) error {
 }
 
 func Read() {
-
-}
-
-func main() {
-	items := []Item{
-		{"Item 1", 1},
-		{"Item 2", 2},
-		{"Item 3", 3},
-	}
-	Write(items[0])
 	// Now let's read the data back and decode it
 	data, err := ioutil.ReadFile("data.gob")
 	if err != nil {
@@ -77,4 +67,14 @@ func main() {
 	for _, item := range decodedItems {
 		fmt.Printf("%s: %d\n", item.Name, item.Value)
 	}
+}
+
+func main() {
+	items := []Item{
+		{"Item 1", 1},
+		{"Item 2", 2},
+		{"Item 3", 3},
+	}
+	Write(items[0])
+	Read()
 }
