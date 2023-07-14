@@ -50,12 +50,14 @@ func main() {
 		Users: []*users.User{},
 	}
 
-	user := &users.User{
-		FirstName: "John",
-		LastName: "Doe",
-	}
+	for i := 0; i < 10; i++ {
+		user := &users.User{
+			FirstName: "John",
+			LastName: "Doe",
+		}
 
-	allUsers.Users = append(allUsers.Users, user)
+		allUsers.Users = append(allUsers.Users, user)
+	}
 
 	if err := SaveObject(allUsers); err != nil {
 		log.Fatalln(err)
