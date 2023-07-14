@@ -2,15 +2,17 @@ package main
 
 import (
 	"log"
+	"time"
 
 	// "golang.org/x/net/context"
 	// "google.golang.org/grpc"
 
-	"github.com/tachyondb/tachyondb/users"
 	"github.com/tachyondb/tachyondb/driver"
+	"github.com/tachyondb/tachyondb/users"
 )
 
 func main() {
+	startTime := time.Now()
 	driver := driver.New()
 
 	for i := 0; i < 10; i++ {
@@ -35,4 +37,5 @@ func main() {
 	}
 
 	log.Println(allUsers)
+	log.Println(time.Since(startTime))
 }
