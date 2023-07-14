@@ -13,18 +13,15 @@ type User struct {
 	LastName string
 }
 
-func SaveToFile(filename string, data interface{}) (error) {
-	dataArray := []interface{}{data}
+func SaveToFile(filename string, data interface{}) error {
+	buffer := &bytes.Buffer{}
+	enc := gob.NewEncoder(buffer)
 
-	var buffer bytes.Buffer
-
-	encoder := gob.NewEncoder(&buffer)
-	err := encoder.Encode(dataArray)
-	if err != nil {
+	if err := enc.Encode(data); err != nil {
 		return err
 	}
 
-	err = os.WriteFile(filename, buffer.Bytes(), 0644)
+	err := os.WriteFile(filename, buffer.Bytes(), 0644)
 	if err != nil {
 		return err
 	}
@@ -32,40 +29,44 @@ func SaveToFile(filename string, data interface{}) (error) {
 	return nil
 }
 
-func ReadFromFile(filename string, data interface{}) (error) {
+func ReadFromFile(filename string, data interface{}) error {
 	fileData, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	// Decode the data
-	var buffer2 bytes.Buffer
-	buffer2.Write(fileData)
+	buffer := bytes.NewBuffer(fileData)
+	dec := gob.NewDecoder(buffer)
 
-	decoder := gob.NewDecoder(&buffer2)
-	err = decoder.Decode(data)
-	if err != nil {
+	if err := dec.Decode(data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+
 func main() {
 	startTime := time.Now()
-	user := &User{
+
+	var data interface{}
+	data = &User{
 		FirstName: "John",
 		LastName:  "Doe",
 	}
 
 	filename := "users.bin"
 
-	SaveToFile(filename, user)
+	if err := SaveToFile(filename, data); err != nil {
+		log.Fatal(err)
+	}
 
-	newUsers := make([]User, 0)
-	ReadFromFile(filename, &newUsers)
+	data = &User{}
+	if err := ReadFromFile(filename, data); err != nil {
+		log.Fatal(err)
+	}
 
-	log.Printf("Decoded User: %+v\n", newUsers)
+	log.Printf("Decoded User: %+v\n", data)
 
 	log.Print(time.Since(startTime))
 }
