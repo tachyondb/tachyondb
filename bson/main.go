@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"os"
 	"reflect"
@@ -24,28 +25,43 @@ func Write(data interface{}) {
 	os.WriteFile("bson.bin", b, 0644)
 }
 
-func Read(data interface{}) ([]byte, error) {
+func Read(data interface{}) error {
 	// Read from file
 	b, err := os.ReadFile("bson.bin")
 	if err != nil {
-		log.Fatal("read error:", err)
+		return err
 	}
 
-	dataAfterTypeCheck := reflect.TypeOf(data)
-	dataType := reflect.TypeOf(data).Kind()
-	dataSome := reflect.New(dataAfterTypeCheck)
-	log.Print(dataAfterTypeCheck, dataType, dataSome)
+	// Ensure data is a pointer
+	rv := reflect.ValueOf(data)
+	if rv.Kind() != reflect.Ptr {
+		return errors.New("data must be a pointer")
+	}
 
-	err = bson.Unmarshal(b, &data)
+	// Check for nil pointer before dereferencing
+	if rv.IsNil() {
+		return errors.New("data cannot be a nil pointer")
+	}
 
+	// Create a new instance of the type pointed to by data
+	// Note: This requires that the underlying type is publicly accessible
+	newData := reflect.New(rv.Elem().Type())
+
+	// Unmarshal BSON into the newly created data
+	err = bson.Unmarshal(b, newData.Interface())
 	if err != nil {
-		log.Fatal("decode error:", err)
+		return err
 	}
+
+	// Now assign the value back to data
+	rv.Elem().Set(newData.Elem())
 
 	log.Print(data, reflect.TypeOf(data))
 
-	return b, nil
+	return nil
 }
+
+
 
 func main() {
 	// Create an item
@@ -53,20 +69,11 @@ func main() {
 		Name:  "Item 1",
 		Value: 1,
 	}
-	log.Print("item before write:", item)
 	Write(item)
 
 	// Decode the item
-	var itemDecoded Item
-	b, err := Read(itemDecoded)
-	if err != nil {
-		log.Fatal("decode error:", err)
-	}
-
-	err = bson.Unmarshal(b, &itemDecoded)
-	if err != nil {
-		log.Fatal("decode error:", err)
-	}
+	itemDecoded := &Item{}
+	Read(itemDecoded)
 
 	log.Print("item after write and read:", itemDecoded)
 }
