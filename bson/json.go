@@ -11,11 +11,13 @@ type Item struct {
 	Value int
 }
 
+var filename = "json"
+
 func Write(data interface{}) error {
 	var fileContents []interface{}
 
-	// Check if bson.bin file exists
-	if _, err := os.Stat("bson.bin"); !os.IsNotExist(err) {
+	// Check if the file exists
+	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		// File exists, read its contents
 		err := Read(&fileContents)
 		if err != nil {
@@ -33,14 +35,14 @@ func Write(data interface{}) error {
 	}
 
 	// Write the JSON to the file
-	os.WriteFile("bson.bin", b, 0644)
+	os.WriteFile(filename, b, 0644)
 
 	return nil
 }
 
 func Read(data interface{}) error {
 	// Read from file
-	b, err := os.ReadFile("bson.bin")
+	b, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
