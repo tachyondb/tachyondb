@@ -2,53 +2,16 @@ package main
 
 import (
 	"log"
-	"os"
 
 	// "golang.org/x/net/context"
 	// "google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/tachyondb/tachyondb/users"
+	"github.com/tachyondb/tachyondb/driver"
 )
 
-func SaveObject(T proto.Message) (error) {
-	out, err := proto.Marshal(T)
-	if err != nil {
-		return err
-	}
-
-	if _, err := os.Stat("bin"); os.IsNotExist(err) {
-		if err := os.Mkdir("bin", 0755); err != nil {
-			return err
-		}
-	}
-
-	if err := os.WriteFile("bin/users.bin", out, 0644); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GetObject(resource string) (proto.Message, error) {
-	in, err := os.ReadFile("bin/" + resource + ".bin")
-	if err != nil {
-		return nil, err
-	}
-
-	allUsers := &users.Users{}
-
-	if err := proto.Unmarshal(in, allUsers); err != nil {
-		return nil, err
-	}
-
-	return allUsers, nil
-}
-
 func main() {
-	allUsers := &users.Users{
-		Users: []*users.User{},
-	}
+	driver := driver.New()
 
 	for i := 0; i < 10; i++ {
 		user := &users.User{
@@ -56,17 +19,19 @@ func main() {
 			LastName: "Doe",
 		}
 
-		allUsers.Users = append(allUsers.Users, user)
+		// TODO: change user to pointer
+		if err := driver.Write("users", user); err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	if err := SaveObject(allUsers); err != nil {
-		log.Fatalln(err)
-	}
+	// allUsers := &users.Users{}
+	user := &users.User{}
 
-	receivedUsers, err := GetObject("users")
+	data, err := driver.Read("users", user)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
-	log.Println(receivedUsers)
+	log.Println(data)
 }
