@@ -25,13 +25,14 @@ func main() {
 		}
 	}
 
-	// allUsers := &users.Users{}
-	user := &users.User{}
+	allUsers := &users.Users{}
+	// user := &users.User{}
 
-	data, err := driver.Read("users", user)
+	// TODO: change user to pointer
+	err := driver.Read("users", allUsers)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(data)
+	log.Println(allUsers)
 }

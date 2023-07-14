@@ -1,19 +1,13 @@
 package driver
 
 import (
+	"log"
 	"os"
 
 	"google.golang.org/protobuf/proto"
-
-	"github.com/tachyondb/tachyondb/users"
 )
 
-func SaveObject(resource string, T proto.Message) (error) {
-	out, err := proto.Marshal(T)
-	if err != nil {
-		return err
-	}
-
+func CreateBinDirIfNotExist() (error) {
 	if _, err := os.Stat("bin"); os.IsNotExist(err) {
 		if err != nil {
 			return err
@@ -24,25 +18,41 @@ func SaveObject(resource string, T proto.Message) (error) {
 		}
 	}
 
-	if err := os.WriteFile("bin/" + resource + ".bin", out, 0644); err != nil {
+	return nil
+}
+
+func SaveObject(resource string, T proto.Message) (error) {
+	out, err := proto.Marshal(T)
+	if err != nil {
+		return err
+	}
+
+	if err := CreateBinDirIfNotExist(); err != nil {
+		return err
+	}
+
+	filename := "bin/" + resource + ".bin"
+	if err := os.WriteFile(filename, out, 0644); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func GetObject(resource string, data proto.Message) (proto.Message, error) {
-	in, err := os.ReadFile("bin/" + resource + ".bin")
+func GetObject(resource string, data proto.Message) error {
+	filename := "bin/" + resource + ".bin"
+
+	in, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		log.Fatalln("error reading file:", err)
+		return err
 	}
 
-	allUsers := &users.Users{}
-
+	// allUsers := data.(*users.Users)
 
 	if err := proto.Unmarshal(in, data); err != nil {
-		return nil, err
+		return err
 	}
 
-	return allUsers, nil
+	return nil
 }
