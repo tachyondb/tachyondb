@@ -30,6 +30,21 @@ func SaveObject(T proto.Message) (error) {
 	return nil
 }
 
+func GetObject(resource string) (proto.Message, error) {
+	in, err := os.ReadFile("bin/" + resource + ".bin")
+	if err != nil {
+		return nil, err
+	}
+
+	allUsers := &users.Users{}
+
+	if err := proto.Unmarshal(in, allUsers); err != nil {
+		return nil, err
+	}
+
+	return allUsers, nil
+}
+
 func main() {
 	allUsers := &users.Users{
 		Users: []*users.User{},
@@ -45,4 +60,11 @@ func main() {
 	if err := SaveObject(allUsers); err != nil {
 		log.Fatalln(err)
 	}
+
+	receivedUsers, err := GetObject("users")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println(receivedUsers)
 }
