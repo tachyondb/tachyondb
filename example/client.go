@@ -15,34 +15,40 @@ type Item struct {
 
 var filename = "data.bin"
 
+func Write(item interface{}) error {
+		// Create a buffer to store encoded data
+		var buf bytes.Buffer
+
+		// Create a new encoder writing to the buffer
+		enc := gob.NewEncoder(&buf)
+
+		// Encode (write) the items one by one
+		err := enc.Encode(&item)
+		if err != nil {
+			return err
+		}
+
+		// Write the encoded data to a file
+		err = ioutil.WriteFile(filename, buf.Bytes(), 0644)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+}
+
+func Read() {
+
+}
+
 func main() {
-	// Create a buffer to store encoded data
-	var buf bytes.Buffer
-
-	// Create a new encoder writing to the buffer
-	enc := gob.NewEncoder(&buf)
-
-	// Create some items to encode
 	items := []Item{
 		{"Item 1", 1},
 		{"Item 2", 2},
 		{"Item 3", 3},
 	}
-
-	// Encode (write) the items one by one
-	for _, item := range items {
-		err := enc.Encode(&item)
-		if err != nil {
-			log.Fatal("encode:", err)
-		}
-	}
-
-	// Write the encoded data to a file
-	err := ioutil.WriteFile("data.gob", buf.Bytes(), 0644)
-	if err != nil {
-		log.Fatal("write file:", err)
-	}
-
+	Write(items[0])
 	// Now let's read the data back and decode it
 	data, err := ioutil.ReadFile("data.gob")
 	if err != nil {
