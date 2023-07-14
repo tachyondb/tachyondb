@@ -3,70 +3,53 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
-	"time"
 )
 
 type User struct {
 	FirstName string
-	LastName string
+	LastName  string
 }
 
-func SaveToFile(filename string, data interface{}) error {
-	buffer := &bytes.Buffer{}
-	enc := gob.NewEncoder(buffer)
-
+func saveToFile(filename string, data interface{}) error {
+	var buffer bytes.Buffer
+	enc := gob.NewEncoder(&buffer)
 	if err := enc.Encode(data); err != nil {
 		return err
 	}
-
-	err := os.WriteFile(filename, buffer.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(filename, buffer.Bytes(), 0644)
 }
 
-func ReadFromFile(filename string, data interface{}) error {
-	fileData, err := os.ReadFile(filename)
+func readFromFile(filename string, out interface{}) error {
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-
-	buffer := bytes.NewBuffer(fileData)
-	dec := gob.NewDecoder(buffer)
-
-	if err := dec.Decode(data); err != nil {
-		return err
-	}
-
-	return nil
+	dec := gob.NewDecoder(bytes.NewBuffer(data))
+	return dec.Decode(out)
 }
 
 
 func main() {
-	startTime := time.Now()
+	filename := "users.gob"
+	user := &User{FirstName: "John", LastName: "Doe"}
+	users := []*User{user}
 
-	var data interface{}
-	data = &User{
-		FirstName: "John",
-		LastName:  "Doe",
+	// Save users to file
+	if err := saveToFile(filename, users); err != nil {
+		log.Fatalf("Failed to save: %v", err)
 	}
 
-	filename := "users.bin"
-
-	if err := SaveToFile(filename, data); err != nil {
-		log.Fatal(err)
+	// Read users from file
+	var loadedUsers []*User
+	if err := readFromFile(filename, &loadedUsers); err != nil {
+		log.Fatalf("Failed to load: %v", err)
 	}
 
-	data = &User{}
-	if err := ReadFromFile(filename, data); err != nil {
-		log.Fatal(err)
+	fmt.Println("Loaded users:")
+	for _, user := range loadedUsers {
+		fmt.Printf("%+v\n", *user)
 	}
-
-	log.Printf("Decoded User: %+v\n", data)
-
-	log.Print(time.Since(startTime))
 }
