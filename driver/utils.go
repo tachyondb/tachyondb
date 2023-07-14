@@ -48,8 +48,6 @@ func GetObject(resource string, data proto.Message) error {
 		return err
 	}
 
-	// allUsers := data.(*users.Users)
-
 	if err := proto.Unmarshal(in, data); err != nil {
 		return err
 	}
