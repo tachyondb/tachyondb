@@ -2,40 +2,36 @@ package main
 
 import (
 	"log"
-	"time"
 
-	// "golang.org/x/net/context"
-	// "google.golang.org/grpc"
-
-	"github.com/tachyondb/tachyondb/driver"
-	"github.com/tachyondb/tachyondb/users"
+	driverInterface "github.com/tachyondb/tachyondb/driver"
 )
 
+type Item struct {
+	Name  string
+	Value int
+}
+
+var filename = "json"
+
+
+
 func main() {
-	startTime := time.Now()
-	driver := driver.New()
+	driver := driverInterface.New()
 
-	for i := 0; i < 10; i++ {
-		user := &users.User{
-			FirstName: "John",
-			LastName: "Doe",
-		}
+	// Create an item and write it to the file
+	driver.Write(Item{Name: "Item 1", Value: 1})
 
-		// TODO: change user to pointer
-		if err := driver.Write("users", user); err != nil {
-			log.Fatal(err)
-		}
+	arrayOfItems := []*Item{}
+
+	for i := 0; i < 100_000; i++ {
+		arrayOfItems = append(arrayOfItems, &Item{Name: "Item 1", Value: 1})
 	}
 
-	allUsers := &users.Users{}
-	// user := &users.User{}
+	driver.BatchWrite(arrayOfItems)
 
-	// TODO: change user to pointer
-	err := driver.Read("users", allUsers)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Read all items from the file
+	var itemsDecoded []interface{}
+	driver.Read(&itemsDecoded)
 
-	log.Println(allUsers)
-	log.Println(time.Since(startTime))
+	log.Print("Items after write and read:", itemsDecoded)
 }
