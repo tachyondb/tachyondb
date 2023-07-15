@@ -13,3 +13,7 @@ message User {
 message Users {
     repeated User users = 1;
 }
+
+message JSONString {
+    string json = 1;
+}

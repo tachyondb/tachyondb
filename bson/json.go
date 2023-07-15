@@ -58,15 +58,9 @@ func Read(data interface{}) error {
 
 func main() {
 	// Create an item and write it to the file
-	item := Item{
-		Name:  "Item 1",
-		Value: 1,
+	for i := 0; i < 100_000; i++ {
+		Write(Item{Name: "Item 1", Value: 1})
 	}
-	Write(item)
-
-	// Write some more items to the file
-	Write(Item{Name: "Item 2", Value: 2})
-	Write(Item{Name: "Item 3", Value: 3})
 
 	// Read all items from the file
 	var itemsDecoded []interface{}
