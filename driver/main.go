@@ -59,7 +59,15 @@ func (d *Driver) BatchWrite(data interface{}) error {
 	}
 
 	// Append new data to fileContents
-	fileContents = append(fileContents, data.([]interface{})...)
+	switch reflect.TypeOf(data).Elem().Kind() {
+	case reflect.Ptr:
+		s := reflect.ValueOf(data)
+		for i := 0; i < s.Len(); i++ {
+			fileContents = append(fileContents, s.Index(i).Interface())
+		}
+	default:
+		fileContents = append(fileContents, data.([]interface{})...)
+	}
 
 	// Convert the slice to JSON
 	b, err := json.Marshal(fileContents)
@@ -72,6 +80,7 @@ func (d *Driver) BatchWrite(data interface{}) error {
 
 	return nil
 }
+
 
 func (d *Driver) Read(data interface{}) error {
 	// Read from file
