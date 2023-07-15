@@ -82,3 +82,6 @@ drwxr-xr-x  3 apinanyogaratnam  staff    96B 13 Jul 19:18 protos
 drwxr-xr-x  3 apinanyogaratnam  staff    96B 13 Jul 19:17 users
 -rw-r--r--@ 1 apinanyogaratnam  staff    90B 14 Jul 09:07 users.bin
 -rw-r--r--@ 1 apinanyogaratnam  staff    71B 14 Jul 10:21 users.gob
+
+
+# TODO: setup kafka as the base connection layer from client to db
