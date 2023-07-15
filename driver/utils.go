@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// TODO: update all this
 func CreateBinDirIfNotExist() (error) {
 	if _, err := os.Stat("bin"); os.IsNotExist(err) {
 		if err != nil {
